@@ -1,12 +1,10 @@
-import { createServerClient } from "@supabase/ssr";
+﻿import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
 export const updateSession = async (request: NextRequest) => {
   try {
     let response = NextResponse.next({
-      request: {
-        headers: request.headers,
-      },
+      request: { headers: request.headers },
     });
 
     const supabase = createServerClient(
@@ -14,38 +12,22 @@ export const updateSession = async (request: NextRequest) => {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          getAll() {
-            return request.cookies.getAll();
-          },
+          getAll() { return request.cookies.getAll(); },
           setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value }) =>
-              request.cookies.set(name, value)
-            );
-            response = NextResponse.next({
-              request: {
-                headers: request.headers,
-              },
-            });
-            cookiesToSet.forEach(({ name, value, options }) =>
-              response.cookies.set(name, value, options)
-            );
+            cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+            response = NextResponse.next({ request: { headers: request.headers } });
+            cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
           },
         },
       }
     );
 
-    // FIX: Using headers instead of .ip
-    const userIp = request.headers.get("x-forwarded-for") || "unknown";
-    console.warn(`[SECURITY] Path accessed: ${request.nextUrl.pathname} by ${userIp}`);
+    // LOGGING CHANGE: No more ".ip" property
+    console.warn(`[LOG] Accessing: ${request.nextUrl.pathname}`);
 
     await supabase.auth.getUser();
-
     return response;
   } catch (e) {
-    return NextResponse.next({
-      request: {
-        headers: request.headers,
-      },
-    });
+    return NextResponse.next({ request: { headers: request.headers } });
   }
 };
