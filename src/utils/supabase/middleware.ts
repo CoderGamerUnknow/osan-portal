@@ -18,7 +18,7 @@ export const updateSession = async (request: NextRequest) => {
             return request.cookies.getAll();
           },
           setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) =>
+            cookiesToSet.forEach(({ name, value }) =>
               request.cookies.set(name, value)
             );
             response = NextResponse.next({
@@ -34,13 +34,9 @@ export const updateSession = async (request: NextRequest) => {
       }
     );
 
-    // This avoids the "Property ip does not exist" error
+    // FIX: Using headers instead of .ip
     const userIp = request.headers.get("x-forwarded-for") || "unknown";
-    
-    // Check for a specific condition to trigger your security logic
-    if (request.nextUrl.pathname.includes("/admin") && userIp === "banned") {
-       return new NextResponse("Forbidden", { status: 403 });
-    }
+    console.warn(`[SECURITY] Path accessed: ${request.nextUrl.pathname} by ${userIp}`);
 
     await supabase.auth.getUser();
 
